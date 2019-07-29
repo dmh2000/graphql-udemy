@@ -1,1 +1,1 @@
-node_modules\.bin\babel-node index.js
+nodemon  index.js --exec babel-node --debug

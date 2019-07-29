@@ -1,0 +1,27 @@
+{
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "plugins": ["mocha"],
+  "globals": {
+    "exports": false
+  },
+  // extends: ["eslint:recommended", "prettier"],
+  "rules": {
+    "eqeqeq": "error",
+    "semi": "error",
+    "semi-spacing": [
+      "error",
+      {
+        "after": true,
+        "before": false
+      }
+    ],
+    "camelcase": "error"
+  }
+}
