@@ -9,7 +9,6 @@
       "request": "launch",
       "name": "Launch via NPM",
       "runtimeExecutable": "npm",
-      "cwd": "${workspaceFolder}",
       "runtimeArgs": ["start", "--inspect"],
       "port": 9229
     }

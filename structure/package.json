@@ -1,5 +1,5 @@
 {
-  "name": "basics",
+  "name": "structure",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,8 +7,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "babel-node index.js --inspect"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {},
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -22,5 +20,7 @@
     "nodemon": "^1.19.1",
     "prettier": "^1.18.2",
     "uuid": "^3.3.2"
-  }
+  },
+  "author": "",
+  "license": "ISC"
 }

@@ -23,9 +23,33 @@ const typeDefs = `
   }
 
   type Mutation {
-    createUser(name:String!, email:String!,age: Int) : User!
-    createPost(title:String!, body:String!, published:Boolean!, user: ID!) : Post!
-    createComment(text:String!,user:ID!,post:ID!) : Comment!
+    createUser(data: CreateUserInput) : User!
+    deleteUser(id: ID!) : User!
+
+    createPost(data: CreatePostInput) : Post!
+    deletePost(id: ID!) : Post!
+
+    createComment(data: CreateCommentInput) : Comment!
+    deleteComment(id: ID!) : Comment!
+  }
+
+  input CreateUserInput {
+    name:String!
+    email:String!
+    age: Int
+  }
+
+  input CreatePostInput {
+    title:String!
+    body:String!
+    published:Boolean!
+    user: ID!
+  }
+
+  input CreateCommentInput {
+    text:String!
+    user:ID!
+    post:ID!
   }
 
   type User {
@@ -54,7 +78,7 @@ const typeDefs = `
   }
 `;
 
-const users = [
+let users = [
   {
     id: '1',
     name: 'bob',
@@ -81,15 +105,15 @@ const users = [
   },
 ];
 
-function newUser(args) {
+function newUser(data) {
   // quit if email already in user
-  const emailTaken = users.some(u => u.email === args.email);
+  const emailTaken = users.some(u => u.email === data.email);
   if (emailTaken) throw new Error('Email taken');
 
   // create a user object
   const user = {
     id: uuidv1(),
-    ...args,
+    ...data,
   };
 
   // add to users database
@@ -99,30 +123,57 @@ function newUser(args) {
   return user;
 }
 
-const posts = [
+function removeUser(id) {
+  let user = users.find(u => u.id === id);
+  if (users === null) throw new Error('User Not Found');
+
+  // keep only comments not made by this user
+  comments = comments.filter(comment => comment.user !== id);
+
+  // get list of posts made by this user
+  let userPosts = posts.filter(post => post.user === id);
+
+  // remove any comments to that post made by user
+  comments = comments.filter(comment => {
+    // keep only comments that are not linked to posts by this user
+    // i.e. return false if this comments post matches a user post
+    // return true if comments post does not match a user post
+    return !userPosts.find(post => comment.post === post.id);
+  });
+
+  // keep only posts not made by this user
+  posts = posts.filter(post => post.user !== id);
+
+  // keep all users except this one
+  users = users.filter(user => user.id !== id);
+
+  return user;
+}
+
+let posts = [
   {
-    id: 1,
+    id: '1',
     title: 'this is a post title 1',
     body: 'This is a post body 1',
     published: true,
     user: '1',
   },
   {
-    id: 2,
+    id: '2',
     title: 'this is a post title 2 ',
     body: 'This is a post body 2 ',
     published: true,
     user: '2',
   },
   {
-    id: 3,
+    id: '3',
     title: 'this is a post title 3 ',
     body: 'This is a post body 3',
     published: false,
     user: '3',
   },
   {
-    id: 4,
+    id: '4',
     title: 'this is a post title 3 ',
     body: 'This is a post body 3',
     published: false,
@@ -130,13 +181,13 @@ const posts = [
   },
 ];
 
-function newPost(args) {
-  const userExists = users.some(u => u.id === args.user);
+function newPost(data) {
+  const userExists = users.some(u => u.id === data.user);
   if (!userExists) throw new Error('User not found');
 
   const post = {
     id: uuidv1(),
-    ...args,
+    ...data,
   };
 
   posts.push(post);
@@ -144,6 +195,24 @@ function newPost(args) {
   return post;
 }
 
+function removePost(id) {
+  let post = posts.find(p => p.id === id);
+  if (post === null) {
+    throw new Error("Post doesn't exist");
+  }
+
+  // remove comments for that post
+  // remove any comments to that post made by user
+  comments = comments.filter(comment => {
+    // keep only comments that don't match id
+    return comment.post !== id;
+  });
+
+  // remove the post
+  posts = posts.filter(p => p.id !== id);
+
+  return post;
+}
 /*
   type Comment {
     id: ID!
@@ -152,7 +221,7 @@ function newPost(args) {
     post: Post!
   }*/
 
-const comments = [
+let comments = [
   {
     id: '101',
     text: 'comment 1',
@@ -179,18 +248,29 @@ const comments = [
   },
 ];
 
-function newComment(args) {
-  const userExists = users.some(u => u.id === args.user);
+function newComment(data) {
+  const userExists = users.some(u => u.id === data.user);
   if (!userExists) throw new Error('User not found');
-  const postExists = posts.some(p => p.id === args.post);
+  const postExists = posts.some(p => p.id === data.post);
   if (!postExists) throw new Error('Post not found');
 
   const comment = {
     id: uuidv1(),
-    ...args,
+    ...data,
   };
 
   comments.push(comment);
+
+  return comment;
+}
+
+function removeComment(id) {
+  const comment = comments.find(c => c.id === id);
+  if (comment === null) {
+    throw new Error("comment doesn't exist");
+  }
+
+  comments = comments.filter(c => c.id !== comment.id);
 
   return comment;
 }
@@ -248,14 +328,26 @@ const resolvers = {
     },
   },
   Mutation: {
+    // USERS
     createUser(parent, args, ctx, info) {
-      return newUser(args);
+      return newUser(args.data);
     },
+    deleteUser(parent, args, ctx, info) {
+      return removeUser(args.id);
+    },
+    // POSTS
     createPost(parent, args, ctx, info) {
-      return newPost(args);
+      return newPost(args.data);
     },
-    createComment(parent, args, ctx, inf) {
-      return newComment(args);
+    deletePost(parent, args, ctx, info) {
+      return removePost(args.id);
+    },
+    // COMMENTS
+    createComment(parent, args, ctx, inf0) {
+      return newComment(args.data);
+    },
+    deleteComment(parent, args, ctx, info) {
+      return removeComment(args.id);
     },
   },
   Post: {
