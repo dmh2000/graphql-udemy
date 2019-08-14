@@ -3,6 +3,7 @@ import Mutation from './Mutation';
 import Posts from './Posts';
 import Users from './Users';
 import Comments from './Comments';
+import Subscription from './Subscription';
 
 const Resolvers =
   // Resolvers
@@ -11,7 +12,8 @@ const Resolvers =
     Mutation: Mutation,
     Post: Posts,
     User: Users,
-    Comment: Comments
+    Comment: Comments,
+    Subscription: Subscription
   };
 
 export default Resolvers;

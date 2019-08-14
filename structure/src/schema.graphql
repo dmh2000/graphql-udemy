@@ -29,6 +29,12 @@ type Mutation {
   updateComment(id: ID!, data: UpdateCommentInput): Comment!
 }
 
+type Subscription {
+  comment(postId: ID!): Comment!
+  # SUBSCRIBE step 3 : add subscription to schema
+  post: PostSubscriptionPayload!
+}
+
 input CreateUserInput {
   name: String!
   email: String!
@@ -86,4 +92,9 @@ type Comment {
   text: String!
   user: User!
   post: Post!
+}
+
+type PostSubscriptionPayload {
+  mutation: String!
+  data: Post!
 }

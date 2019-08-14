@@ -1,0 +1,80 @@
+# query comments
+query {
+  comments {
+    id
+    text
+    user {
+      name
+    }
+    post {
+      id
+    }
+  }
+}
+
+query {
+  users {
+    id
+    name
+    email
+    posts {
+      title
+      comments {
+        text
+        user {
+          name
+        }
+      }
+    }
+  }
+}
+
+
+# create a comment
+mutation {
+  createComment(data: { text: "1", post: "1", user: "1" }) {
+    id
+    text
+  }
+}
+
+# create a post
+mutation {
+  createPost(
+    data: { title: "post 1", body: "body 1", user: "1", published: true }
+  ) {
+    id
+    text
+  }
+}
+
+# subscribe to comments for post
+subscription {
+  comment(postId: "1") {
+    id
+    text
+  }
+}
+
+# subscribe to modified posts
+subscription {
+  post {
+    mutation
+    data {
+      id
+      title
+      body
+      user {
+        id
+      }
+    }
+  }
+}
+
+# update a post
+mutation {
+  updatePost(id:"1", data : {
+    title: "new title"
+    body : "hello"
+  }
+}

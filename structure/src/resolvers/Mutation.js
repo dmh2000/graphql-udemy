@@ -1,5 +1,10 @@
 import uuidv1 from 'uuid/v1';
 
+// constants
+const MUTATION_CREATE = 'CREATED';
+const MUTATION_DELETE = 'DELETED';
+const MUTATION_UPDATE = 'UPDATED';
+
 // ============================================
 // USERS
 // ============================================
@@ -68,7 +73,7 @@ function _updateUser(db, id, data) {
 // ============================================
 // POSTS
 // ============================================
-function _createPost(db, data) {
+function _createPost(db, pubsub, data) {
   const userExists = db.users.some(u => u.id === data.user);
   if (!userExists) throw new Error('User not found');
 
@@ -79,10 +84,20 @@ function _createPost(db, data) {
 
   db.posts.push(post);
 
+  // SUBSCRIBE step 2 : publish the post (if it is published)
+  if (post.published) {
+    pubsub.publish('post', {
+      post: {
+        mutation: MUTATION_CREATE,
+        data: post
+      }
+    });
+  }
+
   return post;
 }
 
-function _deletePost(db, id) {
+function _deletePost(db, pubsub, id) {
   let post = db.posts.find(p => p.id === id);
   if (post === null) {
     throw new Error("Post doesn't exist");
@@ -98,15 +113,33 @@ function _deletePost(db, id) {
   // remove the post
   db.posts = db.posts.filter(p => p.id !== id);
 
+  if (post.published) {
+    pubsub.publish('post', {
+      post: {
+        mutation: MUTATION_DELETE,
+        data: post
+      }
+    });
+  }
+
   return post;
 }
 
-function _updatePost(db, id, data) {
+function _updatePost(db, pubsub, id, data) {
   const post = db.posts.find(p => p.id === id);
   if (post === null) throw new Error('Post Not Found');
 
   if (typeof data.title !== 'undefined') post.title = data.title;
   if (typeof data.body !== 'undefined') post.body = data.body;
+
+  if (post.published) {
+    pubsub.publish('post', {
+      post: {
+        mutation: MUTATION_UPDATE,
+        data: post
+      }
+    });
+  }
 
   return post;
 }
@@ -114,7 +147,7 @@ function _updatePost(db, id, data) {
 // COMMENTS
 // ============================================
 
-function _createComment(db, data) {
+function _createComment(db, pubsub, data) {
   const userExists = db.users.some(u => u.id === data.user);
   if (!userExists) throw new Error('User not found');
   const postExists = db.posts.some(p => p.id === data.post);
@@ -126,6 +159,9 @@ function _createComment(db, data) {
   };
 
   db.comments.push(comment);
+
+  // publish for subscribe
+  pubsub.publish(`comment ${data.post}`, { comment });
 
   return comment;
 }
@@ -162,18 +198,18 @@ const Mutation = {
     return _updateUser(db, args.id, args.data);
   },
   // POSTS
-  createPost(parent, args, { db }, info) {
-    return _createPost(db, args.data);
+  createPost(parent, args, { db, pubsub }, info) {
+    return _createPost(db, pubsub, args.data);
   },
-  deletePost(parent, args, { db }, info) {
-    return _deletePost(db, args.id);
+  deletePost(parent, args, { db, pubsub }, info) {
+    return _deletePost(db, pubsub, args.id);
   },
-  updatePost(parent, args, { db }, info) {
-    return _updatePost(db, args.id, args.data);
+  updatePost(parent, args, { db, pubsub }, info) {
+    return _updatePost(db, pubsub, args.id, args.data);
   },
   // COMMENTS
-  createComment(parent, args, { db }, inf0) {
-    return _createComment(db, args.data);
+  createComment(parent, args, { db, pubsub }, inf0) {
+    return _createComment(db, pubsub, args.data);
   },
   deleteComment(parent, args, { db }, info) {
     return _deleteComment(db, args.id);
