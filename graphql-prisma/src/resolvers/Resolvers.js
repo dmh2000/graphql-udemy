@@ -13,7 +13,7 @@ const Resolvers =
     Post: Post,
     User: User,
     Comment: Comment,
-    // Subscription: Subscription
+    Subscription: Subscription,
   };
 
 export default Resolvers;

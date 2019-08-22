@@ -26,7 +26,6 @@ const Mutation = {
       throw new Error('No User With That ID');
     }
 
-    print(args);
     return prisma.mutation.deleteUser(
       {
         where: args,

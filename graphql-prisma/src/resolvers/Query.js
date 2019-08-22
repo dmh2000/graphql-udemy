@@ -19,8 +19,6 @@ const Query = {
       };
     }
 
-    print(info);
-
     return prisma.query.posts(op, info);
   },
 
@@ -43,7 +41,6 @@ const Query = {
 
   comments(parent, args, { prisma }, info) {
     console.log('Query:comments');
-    print(info);
     return prisma.query.comments(null, info);
   },
 };
