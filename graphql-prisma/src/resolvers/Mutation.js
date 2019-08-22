@@ -7,75 +7,10 @@ const MUTATION_CREATE = 'CREATED';
 const MUTATION_DELETE = 'DELETED';
 const MUTATION_UPDATE = 'UPDATED';
 
-// ============================================
-// USERS
-// ============================================
-function _createUser(prisma, data, info) {
-  const emailTaken = prisma.exists.User({ email: args.data.email });
-  return prisma.mutation.createUser(data);
-}
-
-function _deleteUser(prisma, data) {
-  print(data);
-  return prisma.mutation.deleteUser({
-    where: data,
-  });
-}
-
-function _updateUser(prisma, id, data) {
-  return null;
-}
-
-// ============================================
-// POSTS
-// ============================================
-function _createPost(prisma, data) {
-  return null;
-}
-
-function _deletePost(prisma, id) {
-  return null;
-}
-
-function _updatePost(prisma, id, data) {
-  return null;
-}
-// ============================================
-// COMMENTS
-// ============================================
-
-function _createComment(prisma, data) {
-  const cdata = {
-    data: {
-      text: data.text,
-      post: {
-        connect: {
-          id: data.post,
-        },
-      },
-      user: {
-        connect: {
-          id: data.author,
-        },
-      },
-    },
-  };
-  print(cdata);
-  const r = prisma.mutation.createComment(cdata);
-  print(r);
-  return r;
-}
-
-function _deleteComment(prisma, id) {
-  return null;
-}
-
-function _updateComment(prisma, id, data) {
-  return null;
-}
-
 const Mutation = {
+  // ======================
   // USERS
+  // ======================
   async createUser(parent, args, { prisma }, info) {
     const emailTaken = await prisma.exists.User({ email: args.data.email });
     if (emailTaken) {
@@ -101,27 +36,92 @@ const Mutation = {
   },
 
   updateUser(parent, args, { prisma }, info) {
-    return _updateUser(prisma, args.id, args.data);
+    return prisma.mutation.updateUser(
+      {
+        data: args.data,
+        where: {
+          id: args.id,
+        },
+      },
+      info
+    );
   },
+  // ======================
   // POSTS
+  // ======================
   createPost(parent, args, { prisma }, info) {
-    return _createPost(prisma, args.data);
+    const cdata = {
+      data: {
+        title: args.data.title,
+        body: args.data.body,
+        published: args.data.published,
+        author: {
+          connect: {
+            id: args.data.author,
+          },
+        },
+      },
+    };
+    return prisma.mutation.createPost(cdata, info);
   },
   deletePost(parent, args, { prisma }, info) {
-    return _deletePost(prisma, args.id);
+    return prisma.mutation.deletePost(
+      {
+        where: args,
+      },
+      info
+    );
   },
   updatePost(parent, args, { prisma }, info) {
-    return _updatePost(prisma, args.id, args.data);
+    return prisma.mutation.updatePost(
+      {
+        data: args.data,
+        where: {
+          id: args.id,
+        },
+      },
+      info
+    );
   },
+  // ======================
   // COMMENTS
+  // ======================
   createComment(parent, args, { prisma }, info) {
-    return _createComment(prisma, args.data);
+    const cdata = {
+      data: {
+        text: args.data.text,
+        post: {
+          connect: {
+            id: args.data.post,
+          },
+        },
+        user: {
+          connect: {
+            id: args.data.author,
+          },
+        },
+      },
+    };
+    return prisma.mutation.createComment(cdata, info);
   },
   deleteComment(parent, args, { prisma }, info) {
-    return _deleteComment(prisma, args.id);
+    return prisma.mutation.deleteComment(
+      {
+        where: args,
+      },
+      info
+    );
   },
   updateComment(parent, args, { prisma }, info) {
-    return _updateComment(prisma, args.id, args.data);
+    return prisma.mutation.updateComment(
+      {
+        data: args.data,
+        where: {
+          id: args.id,
+        },
+      },
+      info
+    );
   },
 };
 
